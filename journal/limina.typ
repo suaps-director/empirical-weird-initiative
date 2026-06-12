@@ -1,312 +1,314 @@
-// limina.typ
-// Template for Limina: Journal of Consciousness and Anomalous Phenomena
-// Society for UAP Studies (SUAPS) · Chicago author-date citations
+// limina.typ — Limina: The Journal of UAP Studies
+// Two-column A4 layout matching the published journal PDF format.
+// ISSN 2995-0384 (online) · 2995-0376 (print)
+// Chicago author-date citations
 
-// ── Colour palette (matches SUAPS brand) ────────────────────────────
-#let amber     = rgb("#C4892A")
 #let charcoal  = rgb("#1E1A16")
-#let teal      = rgb("#3A7A72")
 #let mid-gray  = rgb("#6B6560")
-#let rule-gray = rgb("#D4CFC9")
+#let rule-gray = rgb("#C0BBB5")
+#let amber     = rgb("#C4892A")
+#let link-blue = rgb("#1155CC")
 
-// ── Font names ───────────────────────────────────────────────────────
-#let serif-font = "EB Garamond 12"
-#let sans-font  = "Inter"
-
-// ─────────────────────────────────────────────────────────────────────
-// limina-article: main template function
+// ─────────────────────────────────────────────────────────────────
+// limina-article — main template function
 //
-// authors: array of dictionaries with keys:
-//   name        (required)  full name
-//   mark        (optional)  superscript affiliation marker, e.g. "1"
-//   affiliation (optional)  institution string
-//   email       (optional)  contact email (first match becomes correspondence)
-// ─────────────────────────────────────────────────────────────────────
+// authors: array of dicts; recognised keys:
+//   name        (required)  display name
+//   suffix      (optional)  credentials appended after name ("Ph.D.")
+//   affiliation (optional)  institution line (italic)
+//   email       (optional)  first match becomes correspondence address
+//   orcid       (optional)  ORCID ID string (no URL prefix)
+// ─────────────────────────────────────────────────────────────────
 #let limina-article(
-  title:       [],
-  short-title: none,
-  authors:     (),
-  abstract:    [],
-  keywords:    (),
-  volume:      1,
-  issue:       1,
-  year:        2026,
-  page-start:  none,
-  doi:         none,
-  received:    none,
-  accepted:    none,
+  title:      [],
+  authors:    (),
+  abstract:   [],
+  keywords:   (),
+  volume:     1,
+  issue:      1,
+  year:       2024,
+  pages:      none,     // page range string, e.g. "40-54"
+  doi:        none,
+  received:   none,
+  revised:    none,     // "received in revised form" date
+  accepted:   none,
+  online:     none,     // "available online" date
+  page-start: 1,        // first page number of this article
   body,
 ) = {
 
-  let run-title = if short-title != none { short-title } else { title }
+  // Running header citation string
+  let pages-str = if pages != none { " " + pages } else { "" }
+  let vol-str = str(volume) + "(" + str(issue) + ") (" + str(year) + ")" + pages-str
 
-  // ── Document metadata ────────────────────────────────────────────
-  set document(
-    title:  title,
-    author: authors.map(a => a.name).join(", "),
-  )
+  // ── Document metadata ─────────────────────────────────────────
+  set document(title: title)
+  counter(page).update(page-start)
 
-  // ── Page layout ──────────────────────────────────────────────────
+  // ── Page geometry and running header ─────────────────────────
   set page(
-    paper:  "a4",
-    margin: (top: 24mm, bottom: 28mm, left: 35mm, right: 25mm),
-
-    header: context {
-      let pg = counter(page).get().first()
-      if pg <= 1 { return [] }
-      set text(font: sans-font, size: 8.5pt, fill: mid-gray)
-      set par(justify: false, first-line-indent: 0pt, spacing: 0pt)
-      if calc.odd(pg) {
-        grid(
-          columns: (1fr, auto),
-          align(left)[*LIMINA* #h(4pt) #sym.bar.v #h(4pt) Vol. #volume, No. #issue (#year)],
-          align(right)[#pg],
-        )
-      } else {
-        grid(
-          columns: (auto, 1fr),
-          align(left)[#pg],
-          align(right)[#run-title],
-        )
-      }
-      v(3pt)
-      line(length: 100%, stroke: 0.4pt + rule-gray)
-    },
-
-    footer: context {
-      let pg = counter(page).get().first()
-      if pg != 1 { return [] }
-      line(length: 100%, stroke: 0.4pt + rule-gray)
-      v(3pt)
-      set text(font: sans-font, size: 8pt, fill: mid-gray)
-      set par(justify: false, first-line-indent: 0pt, spacing: 0pt)
-      let doi-text = if doi != none [
-        DOI: #link("https://doi.org/" + doi)[#doi]
-      ] else []
+    paper: "a4",
+    margin: (top: 19mm, bottom: 20mm, left: 18mm, right: 18mm),
+    header: {
+      set par(first-line-indent: 0pt, spacing: 0pt, justify: false, leading: 0pt)
+      v(-4pt)
       grid(
         columns: (1fr, auto),
-        align(left, doi-text),
-        align(right)[© #year The Author(s). Published by SUAPS.],
+        align(horizon + left)[
+          #set text(font: "EB Garamond 12", size: 8.5pt, style: "italic")
+          Limina \u{2014} The Journal of UAP Studies #vol-str
+        ],
+        align(horizon + right)[
+          #set text(font: "EB Garamond 12", size: 8.5pt, style: "normal")
+          #context counter(page).display()
+        ],
       )
+      v(2pt)
+      line(length: 100%, stroke: 0.4pt + rule-gray)
     },
+    footer: none,
   )
 
-  // ── Base typography ──────────────────────────────────────────────
-  set text(
-    font:     serif-font,
-    size:     11.5pt,
-    fill:     charcoal,
-    hyphenate: true,
-    lang:     "en",
-  )
+  // ── Base typography ───────────────────────────────────────────
+  set text(font: "EB Garamond 12", size: 10pt, fill: charcoal,
+           hyphenate: true, lang: "en")
+  set par(justify: true, leading: 0.5em, spacing: 0.5em,
+          first-line-indent: 1.2em)
 
-  set par(
-    justify:           true,
-    leading:           0.5em,
-    spacing:           0.5em,
-    first-line-indent: 1.5em,
-  )
-
-  // ── Heading styles ────────────────────────────────────────────────
+  // ── Heading styles (numbered bold, same font as body) ─────────
   show heading.where(level: 1): it => {
-    v(1.6em, weak: true)
-    block(below: 0.65em)[
-      #set text(font: sans-font, size: 10pt, weight: "semibold", fill: charcoal)
-      #set par(justify: false, first-line-indent: 0pt, spacing: 0pt)
+    v(1.1em, weak: true)
+    block(below: 0.55em)[
+      #set text(size: 10pt, weight: "bold")
+      #set par(first-line-indent: 0pt, spacing: 0pt, justify: false)
       #it.body
     ]
   }
 
   show heading.where(level: 2): it => {
-    v(1.1em, weak: true)
-    block(below: 0.55em)[
-      #set text(font: sans-font, size: 10pt, weight: "regular", style: "italic", fill: charcoal)
-      #set par(justify: false, first-line-indent: 0pt, spacing: 0pt)
-      #it.body
-    ]
-  }
-
-  show heading.where(level: 3): it => {
-    v(0.9em, weak: true)
+    v(0.8em, weak: true)
     block(below: 0.4em)[
-      #set text(font: serif-font, size: 11.5pt, style: "italic", fill: charcoal)
-      #set par(justify: false, first-line-indent: 0pt, spacing: 0pt)
+      #set text(size: 10pt, weight: "bold", style: "italic")
+      #set par(first-line-indent: 0pt, spacing: 0pt, justify: false)
       #it.body
     ]
   }
 
-  // ── Links ────────────────────────────────────────────────────────
-  show link: it => {
-    set text(fill: teal)
-    it
+  // Appendix-style heading: centered bold
+  show heading.where(level: 3): it => {
+    v(1em, weak: true)
+    block(below: 0.55em)[
+      #set text(size: 10pt, weight: "bold")
+      #set par(first-line-indent: 0pt, spacing: 0pt, justify: false, leading: 0.6em)
+      #align(center, it.body)
+    ]
   }
 
-  // ── Block quotations ─────────────────────────────────────────────
+  // ── Links ─────────────────────────────────────────────────────
+  show link: it => text(fill: link-blue, it)
+
+  // ── Block quotes ──────────────────────────────────────────────
   show quote.where(block: true): it => {
     set par(first-line-indent: 0pt)
-    block(
-      inset: (left: 2em, right: 2em),
-      below: 0.8em,
-      above: 0.8em,
-    )[
-      #set text(size: 10.5pt)
+    block(inset: (left: 1.5em, right: 1em), above: 0.8em, below: 0.8em)[
+      #set text(size: 9.5pt, style: "italic")
       #it.body
     ]
   }
 
-  // ── Figure captions ──────────────────────────────────────────────
+  // ── Figure captions ───────────────────────────────────────────
   show figure.caption: it => {
-    set text(font: sans-font, size: 9pt, fill: mid-gray)
-    set par(justify: true, first-line-indent: 0pt)
-    it
+    set text(size: 9pt)
+    set par(first-line-indent: 0pt, spacing: 0.3em, justify: true)
+    [#strong[#it.supplement #context it.counter.display(it.numbering).]
+    #it.body]
   }
 
-  // ── Tables ───────────────────────────────────────────────────────
+  // ── Tables ────────────────────────────────────────────────────
   set table(
-    stroke: (_, y) => (
-      top:    if y == 0  { 1pt  + charcoal } else if y == 1 { 0.5pt + charcoal } else { none },
-      bottom: if y == 0  { 0.5pt + charcoal } else { none },
-    ),
-    inset: (x: 8pt, y: 5pt),
+    stroke: 0.45pt + charcoal,
+    inset: (x: 6pt, y: 4pt),
+    align: left,
   )
-  show table.header: set text(font: sans-font, size: 9.5pt, weight: "semibold")
-  show table:        set text(font: sans-font, size: 9.5pt)
+  show table.header: set text(weight: "bold")
+  show table:        set text(size: 9pt, font: "EB Garamond 12")
+  show figure.where(kind: table): set figure(placement: auto)
 
-  // ── Footnotes ────────────────────────────────────────────────────
+  // ── Footnotes ─────────────────────────────────────────────────
   set footnote.entry(
     separator: line(length: 30%, stroke: 0.4pt + rule-gray),
-    indent:    0.5em,
-    gap:       0.4em,
+    indent: 0.5em,
+    gap: 0.35em,
   )
-  show footnote.entry: set text(size: 9.5pt)
+  show footnote.entry: set text(size: 8.5pt)
 
-  // ── Bibliography ────────────────────────────────────────────────
+  // ── Bibliography ──────────────────────────────────────────────
   show bibliography: it => {
-    set text(size: 10pt)
-    set par(justify: false, first-line-indent: 0pt, hanging-indent: 1.5em, spacing: 0.6em)
+    set text(size: 9pt)
+    set par(
+      first-line-indent: 0pt,
+      hanging-indent: 1.5em,
+      spacing: 0.5em,
+      justify: false,
+      leading: 0.5em,
+    )
     it
   }
 
   // ════════════════════════════════════════════════════════════════
-  // PAGE 1 FRONT MATTER
+  // PAGE 1 FRONT MATTER (single-column width)
   // ════════════════════════════════════════════════════════════════
 
-  // Masthead amber rule
-  block(width: 100%, height: 3pt, fill: amber)
-  v(8pt)
-
-  // Journal header row
-  grid(
-    columns: (1fr, auto),
-    align(horizon)[
-      #set par(justify: false, first-line-indent: 0pt, spacing: 0.25em)
-      #text(font: sans-font, size: 19pt, weight: "bold", fill: amber)[LIMINA]
-      #v(2pt)
-      #text(font: sans-font, size: 8.5pt, fill: mid-gray)[
-        Journal of Consciousness and Anomalous Phenomena \
-        Society for UAP Studies (SUAPS)
-      ]
-    ],
-    align(horizon + right)[
-      #set text(font: sans-font, size: 9pt, fill: mid-gray)
-      #set par(justify: false, first-line-indent: 0pt, spacing: 0.2em)
-      Vol. #volume, No. #issue (#year)
-      #if page-start != none [ \ p. #page-start ]
-    ],
-  )
-
-  v(8pt)
-  line(length: 100%, stroke: 0.5pt + rule-gray)
-  v(22pt)
-
-  // Article title
+  // ── Masthead ──────────────────────────────────────────────────
   {
-    set text(font: serif-font, size: 22pt, weight: "regular")
-    set par(justify: false, leading: 0.75em, spacing: 0pt, first-line-indent: 0pt)
+    set par(first-line-indent: 0pt, spacing: 0.25em, justify: false, leading: 0.5em)
+    grid(
+      columns: (46pt, 1fr, 46pt),
+      gutter: 8pt,
+      align: horizon,
+
+      // Left: SUAPS logo
+      image("../SUAPS redesigned logo.png", height: 46pt),
+
+      // Center: journal name + URLs
+      align(center + horizon)[
+        #text(font: "Inter", size: 13.5pt, weight: "bold")[
+          Limina \u{2014} The Journal of UAP Studies
+        ]
+        #v(3pt)
+        #text(font: "Inter", size: 8pt, fill: mid-gray)[
+          #link("http://limina.uapstudies.org/") |
+          #link("https://limina.scholasticahq.com/")
+        ]
+      ],
+
+      // Right: circular Limina badge
+      align(center + horizon)[
+        #box(
+          width: 46pt, height: 46pt,
+          radius: 23pt,
+          fill: amber,
+          clip: true,
+        )[
+          #align(center + horizon)[
+            #pad(5pt)[
+              #set text(font: "Inter", size: 5.5pt, fill: white, weight: "bold")
+              #set par(leading: 0.4em)
+              #align(center)[
+                Limina \
+                Journal of \
+                UAP Studies
+              ]
+            ]
+          ]
+        ]
+      ],
+    )
+  }
+
+  v(6pt)
+  line(length: 100%, stroke: 0.5pt + rule-gray)
+  v(18pt)
+
+  // ── Article title ─────────────────────────────────────────────
+  {
+    set text(font: "EB Garamond 12", size: 17pt, weight: "bold")
+    set par(first-line-indent: 0pt, justify: false, leading: 0.65em, spacing: 0pt)
     title
   }
 
-  v(14pt)
-
-  // Author names
-  {
-    set text(font: sans-font, size: 10.5pt, fill: charcoal)
-    set par(justify: false, first-line-indent: 0pt, spacing: 0.2em)
-    let names = authors.enumerate().map(((i, a)) => {
-      if "mark" in a {
-        [#a.name#super(text(font: sans-font, size: 7pt)[#a.mark])]
-      } else {
-        a.name
-      }
-    })
-    names.join([,#h(4pt)])
-  }
-
-  v(7pt)
-
-  // Affiliations
-  {
-    set text(font: sans-font, size: 8.5pt, fill: mid-gray, style: "italic")
-    set par(justify: false, first-line-indent: 0pt, spacing: 0.2em)
-    for a in authors {
-      if "affiliation" in a {
-        if "mark" in a [ #super(text(font: sans-font, size: 7pt)[#a.mark]) ]
-        [#a.affiliation \ ]
-      }
-    }
-  }
-
-  // Correspondence + dates
-  {
-    set text(font: sans-font, size: 8.5pt, fill: mid-gray)
-    set par(justify: false, first-line-indent: 0pt, spacing: 0.25em)
-    let corresp = authors.filter(a => "email" in a)
-    if corresp.len() > 0 {
-      v(3pt)
-      [Correspondence: #link("mailto:" + corresp.first().email)[#corresp.first().email]]
-    }
-    if received != none or accepted != none {
-      v(3pt)
-      let parts = ()
-      if received != none { parts.push([Received: #received]) }
-      if accepted != none { parts.push([Accepted: #accepted]) }
-      parts.join([#h(8pt) · #h(8pt)])
-    }
-  }
-
-  v(20pt)
-
-  // Abstract block
-  line(length: 100%, stroke: 0.6pt + amber)
   v(10pt)
 
+  // ── Author list ───────────────────────────────────────────────
   {
-    set par(justify: false, first-line-indent: 0pt, spacing: 0.3em)
-    text(font: sans-font, size: 8.5pt, weight: "semibold", fill: amber)[ABSTRACT]
+    set par(first-line-indent: 0pt, spacing: 0.22em, justify: false, leading: 0.5em)
+    for (i, a) in authors.enumerate() {
+      // Name + optional suffix
+      text(size: 10pt)[
+        #a.name#if "suffix" in a [, #a.suffix]
+      ]
+      linebreak()
+      // Affiliation (italic)
+      if "affiliation" in a {
+        text(size: 9pt, style: "italic")[#a.affiliation]
+        linebreak()
+      }
+      // ORCID badge + link
+      if "orcid" in a {
+        let orcid-url = "https://orcid.org/" + a.orcid
+        box(
+          width: 8pt, height: 8pt,
+          radius: 4pt,
+          fill: rgb("#A6CE39"),
+          clip: true,
+        )[
+          #align(center + horizon)[
+            #text(font: "Inter", size: 4.5pt, fill: white, weight: "bold")[iD]
+          ]
+        ]
+        h(3pt)
+        text(size: 8pt)[#link(orcid-url)[#orcid-url]]
+        linebreak()
+      }
+      if i < authors.len() - 1 { v(5pt) }
+    }
   }
 
-  v(5pt)
+  v(10pt)
 
+  // ── ARTICLE INFO + ABSTRACT two-column panel ──────────────────
   {
-    set text(font: serif-font, size: 10.5pt, fill: charcoal)
-    set par(justify: true, leading: 0.5em, spacing: 0.5em, first-line-indent: 0pt)
-    abstract
-  }
+    let corresp = authors.filter(a => "email" in a)
+    let first-author = if authors.len() > 0 { authors.first().name } else { "The Author(s)" }
 
-  if keywords.len() > 0 {
-    v(9pt)
-    set par(justify: false, first-line-indent: 0pt)
-    [
-      #text(font: sans-font, size: 8.5pt, weight: "semibold", fill: amber)[KEYWORDS]
-      #h(6pt)
-      #text(font: serif-font, size: 10.5pt, style: "italic", fill: mid-gray)[#keywords.join(" · ")]
-    ]
+    grid(
+      columns: (1fr, 2fr),
+      gutter: 14pt,
+
+      // Left column: ARTICLE INFO
+      align(top)[
+        #set par(first-line-indent: 0pt, spacing: 0.28em, justify: false, leading: 0.5em)
+        #text(font: "Inter", size: 8pt, weight: "semibold")[ARTICLE INFO]
+        #v(5pt)
+        #set text(size: 8.5pt)
+        #if received != none [Received: #received \ ]
+        #if revised  != none [Received in revised form: #revised \ ]
+        #if accepted != none [Accepted: #accepted \ ]
+        #if online   != none [Available online: #online \ ]
+        #v(7pt)
+        #if corresp.len() > 0 {
+          text(size: 8.5pt, style: "italic")[
+            Author contact: #corresp.first().email
+          ]
+          linebreak()
+        }
+        #v(8pt)
+        // Copyright + CC licence
+        #set text(size: 7pt, fill: mid-gray)
+        #set par(leading: 0.45em, spacing: 0pt)
+        © #first-author. Published by the Society for UAP Studies.
+        This is an open access article under the CC license.
+        (#link("http://creativecommons.org/licenses/by/4.0/")[http://creativecommons.org/licenses/by/4.0/])
+      ],
+
+      // Right column: ABSTRACT
+      align(top)[
+        #set par(first-line-indent: 0pt, spacing: 0.28em, justify: true, leading: 0.5em)
+        #text(font: "Inter", size: 8pt, weight: "semibold")[ABSTRACT]
+        #v(5pt)
+        #set text(size: 9.5pt)
+        #set par(leading: 0.5em, first-line-indent: 0pt)
+        #abstract
+      ],
+    )
   }
 
   v(8pt)
-  line(length: 100%, stroke: 0.6pt + amber)
-  v(26pt)
+  line(length: 100%, stroke: 0.5pt + rule-gray)
+  v(14pt)
 
-  // ── Article body ─────────────────────────────────────────────────
-  body
+  // ════════════════════════════════════════════════════════════════
+  // TWO-COLUMN BODY
+  // ════════════════════════════════════════════════════════════════
+  columns(2, gutter: 8pt, body)
 }
